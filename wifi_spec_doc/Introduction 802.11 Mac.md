@@ -8,7 +8,7 @@
 
 ​		在802.11 Spec中，针对Non-DMG STA以及DMG STA有两种MAC架构，定义如下图。
 
-<img src="C:/Users/chenjjsq/Desktop/wifi_spec_doc/image-20221121142900189.png" alt="image-20221121142900189" style="zoom:67%;" />
+<img src="Introduction 802.11 Mac.assets/image-20221121142900189.png" alt="image-20221121142900189" style="zoom:67%;" />
 
 在此Mac系统架构中
 
@@ -17,7 +17,7 @@
 - HCF是针对QOS服务的
 - MCF是用在mesh网络中STA服务的
 
-<img src="C:/Users/chenjjsq/Desktop/wifi_spec_doc/image-20221121143316456.png" alt="image-20221121143316456" style="zoom:67%;" />
+<img src="Introduction 802.11 Mac.assets/image-20221121143316456.png" alt="image-20221121143316456" style="zoom:67%;" />
 
 此Mac架构中，MAC 层提供的服务都是基于使用DMG 信道竞争的机制，向上提供beamforming，ATI, CBAP以及SP等相关服务。
 
@@ -37,7 +37,7 @@ dmg是毫米波802.11ad，在实际的过程中，预计接触到的来看，更
 
 ​		和其他链路层协议不同，802.11 采用正面回应机制。所有传送出去的帧都必须得到回应，如下图所示，**只要任何一个环节失败，该帧即视为已经丢掉。**  
 
-<img src="C:/Users/chenjjsq/Desktop/wifi_spec_doc/image-20221121162526230.png" alt="image-20221121162526230" style="zoom:80%;" />
+<img src="Introduction 802.11 Mac.assets/image-20221121162526230.png" alt="image-20221121162526230" style="zoom:80%;" />
 
 ​		如上图所示，上述为帧发送的基本操作(帧发送，此时左边设备定时器启动，右边设备收到此frame后，在timer设定的时间内回复ack）整个过程每个步骤的必要的，如果缺少某一部分，则会导致帧发送失败。基本处理单元可说是“非成即败“。数据帧的传送者必须收到应答ack，否则该帧被视为已经丢失。
 
@@ -49,13 +49,13 @@ dmg是毫米波802.11ad，在实际的过程中，预计接触到的来看，更
 
 ​		在以太网络中，工作站是通过CSMA/CD载波侦听功能，会详细记录各个网络节点的信息。但是在无线网络中的界限比较模糊，有时候并不是每个节点都可以跟其他节点直接通信，如图所示：
 
-<img src="C:/Users/chenjjsq/Desktop/wifi_spec_doc/image-20221121174231307.png" alt="image-20221121174231307" style="zoom:80%;" />
+<img src="Introduction 802.11 Mac.assets/image-20221121174231307.png" alt="image-20221121174231307" style="zoom:80%;" />
 
 正常情况下，Node1的范围表示为红色部分，node2表示为绿色部分，Node1与Node2可以正常通信。
 
 但如果存在多个网络节点的情况下，如下图所示：
 
-<img src="C:/Users/chenjjsq/Desktop/wifi_spec_doc/image-20221121174736028.png" alt="image-20221121174736028" style="zoom:80%;" />
+<img src="Introduction 802.11 Mac.assets/image-20221121174736028.png" alt="image-20221121174736028" style="zoom:80%;" />
 
 Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3和节点4是隐藏节点，同样对于节点3和节点4来说，节点1是隐藏节点，由于没有双方都感知不到对方，容易造成节点1和节点3（或节点4）同时传输数据，从而无法解决导致数据正确的传输。
 
@@ -63,7 +63,7 @@ Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3�
 
 ​		该场景即适用与普通场景，对隐藏节点同样适用，如之前所述在802.3以太网络协议中，传输和检测可以同时进行，而无线网络则是半双工性质无法做到此功能，因此在实际的传输过程中会经常出现封包碰撞的情况，如下图所示：
 
-<img src="C:/Users/chenjjsq/Desktop/wifi_spec_doc/image-20221121225223960.png" alt="image-20221121225223960" style="zoom:80%;" />
+<img src="Introduction 802.11 Mac.assets/image-20221121225223960.png" alt="image-20221121225223960" style="zoom:80%;" />
 
 ​		在传输过程中A和B同时传输，在C的位置发生碰撞，导致C不能够解析其波形，继续碰撞A也不会解析其波形，通过图形左边所示，往往在传输的过程中A传输的数据与A感知的数据是不一样的。
 
@@ -73,7 +73,7 @@ Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3�
 
 ​		无线介质的访问，是有协调功能所管控，无线网的CSMA/CA访问，是有分布式协调功能（distributed coordination function，简称DCF）所管控。如果需要用到免竞争服务，则可通过架构与DCF之上的点协调功能（point coordination function，简称PCF)来管控。在各去所需的DCF与精确控制的PCF之间，也可以选择使用介于两种极端之间，采用中庸之道的混合式协调功能（HCF)。之前架构图所示。
 
-<img src="C:/Users/chenjjsq/Desktop/wifi_spec_doc/image-20221121231540415.png" alt="image-20221121231540415" style="zoom:50%;" />
+<img src="Introduction 802.11 Mac.assets/image-20221121231540415.png" alt="image-20221121231540415" style="zoom:50%;" />
 
 列表如下：
 
@@ -94,7 +94,7 @@ Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3�
 
 其中，由于DCF具有良好的分布式特性，从而应用更加广泛，而PCF模式则较为少用。在802.11e协议中，DCF被扩展为EDCA模式，PCF模式被扩展为HCCA模式。本文所讨论的主要内容即有关DCF模式以及其核心CSMA/CA机制。它的运作机制如下图所示：
 
-![image-20221122110927872](image-20221122110927872.png)
+![image-20221122110927872](Introduction 802.11 Mac.assets/image-20221122110927872.png)
 
 - 它是基于CSMA/CA模式去发包
 - 每台STA都是由竞争周期去获取媒介传输资源，如图显示为CP
@@ -115,13 +115,13 @@ Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3�
 
 它的整体示意图如下如所示：
 
-![image-20221122112630849](image-20221122112630849.png)
+![image-20221122112630849](Introduction 802.11 Mac.assets/image-20221122112630849.png)
 
 ### 2.3 HCF (Hybrid Coordination Function)
 
 此模式会在802.1e详解，简要说明一下，此种模式下，只要获得竞争窗口，会持续一段时间，在spec定义为txop，详情如下图所示：
 
-![image-20221122113413001](image-20221122113413001.png)
+![image-20221122113413001](Introduction 802.11 Mac.assets/image-20221122113413001.png)
 
 
 
@@ -131,7 +131,7 @@ Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3�
 
 ​		在Spec定义中，帧与帧之间的间隙称为IFS，STA应通过在指定的时间间隔内使用CSMD/CA函数，当前定义了十个不同的IFS，以提供访问无线介质，如下图所示：
 
-![image-20221122150414171](image-20221122150414171.png)
+![image-20221122150414171](Introduction 802.11 Mac.assets/image-20221122150414171.png)
 
 在802.11无线网络中，常用的帧间间隔SIFS, PIFS, DIFS, AIFS 
 
@@ -155,21 +155,21 @@ Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3�
 
 前面描述的ifs功能，使用IFS来表示等待一词描述frame之间，而在slot time内也理解为监听信道，在实际的过程中并不是如此，根据spec可以了解到 slotTime也不是整个周期都是在监听信道。参考一篇论文《WiFi-Nano: Reclaiming WiFi Efficiency Through 800 ns Slots》，其举例一个9us的slot time的组成如下：
 
-![img](28c4c27c1e56b139ff31f6a33ed60366_1440w.png)
+![img](Introduction 802.11 Mac.assets/28c4c27c1e56b139ff31f6a33ed60366_1440w.png)
 
 即Slot time由电磁波传播延迟propagation，信道检测CCA时间，以及天线的发送/接收切换组成，在spec中还添加了MAC的处理延迟，如下图所示。故这里就明确回答了，在一个slot time内不是整个周期都在监听信道，而只有CCA时间这一部分在监听信道。而最后一个天线发送转换也好理解一些，这里我们在说CCA监听信道的过程中，除了为了之前我们所述的backoff过程，实际上节点也在利用CCA来监听，是不是有给我的数据包。如果该数据包不是给我的，那么CCA监听结果就是忙，然后等一个slot以后继续监听。如果监听该数据包是给我的，那么就直接转换到接收状态，而不是继续进行每一个slot监听的动作了。
 
-![image-20221122153019976](image-20221122153019976.png)
+![image-20221122153019976](Introduction 802.11 Mac.assets/image-20221122153019976.png)
 
 ​		另外物理层的不同调制模式，slot time的时间也是不一样的，如下图所示, 采取OFDM的调制模式slot time的时间为9us，而在802.11g中 有long slot time（20us) 以及short slot time（9us）
 
-![image-20221122155701544](image-20221122155701544.png)
+![image-20221122155701544](Introduction 802.11 Mac.assets/image-20221122155701544.png)
 
 ### 3.2 SIFS
 
 ​		在传输过程中SIFS有最高的优先权，主要针对ACK frame， cts frame，以及ba frame等，它执行的时间主要是包括phy层以及mac层的延迟 + trx的转换时间，如下图所示，与slot time一样每个协议配置的时间不同，Slot time的图定义所示。
 
-​										![image-20221122160842753](image-20221122160842753.png)
+​										![image-20221122160842753](Introduction 802.11 Mac.assets/image-20221122160842753.png)
 
 ### 3.3 PIFS
 
@@ -181,7 +181,7 @@ Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3�
 
 ### 3.5 EIFS
 
-<img src="image-20221122161655695.png" alt="image-20221122161655695" style="zoom: 50%;" />
+<img src="Introduction 802.11 Mac.assets/image-20221122161655695.png" alt="image-20221122161655695" style="zoom: 50%;" />
 
 ## 4 802.11 Mac  CSMA/CA 及 RTS/CTS
 
@@ -193,11 +193,11 @@ Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3�
 
 ​		假定在如下拓扑网网络中，存在一个AP，与两个节点（STA1与STA2)，在无线网络中，如果STA1与STA2同时给AP发送数据，根据之前的说明，可能会在AP处发生冲突，从而两者都无法正确接收成功，最终传输失败。
 
-<img src="https://pic4.zhimg.com/80/ed2e0d4d2791107140999bb15f800e63_1440w.webp" alt="img" style="zoom:50%;" />
+<img src="Introduction 802.11 Mac.assets/ed2e0d4d2791107140999bb15f800e63_1440w.png" alt="img" style="zoom:50%;" />
 
 而CSMA/CA提供一种规避机制，它的流程如下图所示，其中相应的帧间间隔已经说明，但还有几个概念需要说明。
 
-![image-20221122163903933](image-20221122163903933.png)
+![image-20221122163903933](Introduction 802.11 Mac.assets/image-20221122163903933.png)
 
 - contention window
 
@@ -231,13 +231,13 @@ Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3�
 
 source发送RTS控制帧信息，其中包含NAV时间长度，当RTS发出来过后，其他的设备的NAV duration就设置为source的 NAV值，该时间 包括了目的地回复的所有制的时间包括cts，data以及ack时间。然而网络中不是所有的设备都可以接收到source的RTS，因此接收端会以CTS帧加以应答，其中也包活NAV，不过计时相较于RTS的NAV值要小很多。此NAV可防止其他工作站在传输过程中访问介质，直到传输过程结束。一但完成整个过程，进入到竞争期间，如下图所示。
 
-<img src="image-20221122174814748.png" alt="image-20221122174814748" style="zoom:67%;" />
+<img src="Introduction 802.11 Mac.assets/image-20221122174814748.png" alt="image-20221122174814748" style="zoom:67%;" />
 
 
 
 在使用CSMA/CA过程中，虚拟载波和物理载波实际过程中会同时使用，如下图所示：
 
-![img](1f3c731c2ce798d8f5e82c86c494629d_1440w.webp)
+![img](Introduction 802.11 Mac.assets/1f3c731c2ce798d8f5e82c86c494629d_1440w.webp)
 
 ​		从该图中，我们可以明显看出，物理载波监听和虚拟载波监听是同时执行判断的，其中只要有一个是出于Busy状态，那么就不会触发随机回退计数值减1的过程，换言之，即是挂起了随机回退计数值。从该图中，我们可以明显得知，虚拟载波监听就是对应的NAV机制，而物理载波监听则是对应到了CCA（Clear Channel Assessment）机制。
 
@@ -247,7 +247,7 @@ source发送RTS控制帧信息，其中包含NAV时间长度，当RTS发出来�
 
 在讲解CSMA/CA工作机制，利用下图来进行说明CSMA/CA的工作流程：
 
-![img](16def232e6120952e14b1047592dead3_1440w.png)
+![img](Introduction 802.11 Mac.assets/16def232e6120952e14b1047592dead3_1440w.png)
 
 1. 当STA1与STA2都需要发送数据，需要进行信道竞争，首先需要“等待”DIFS时间，如果DIFS时间后，信道保持空闲状态，那么就可以进行backoff过程。如图STA2所示。
 2. 若STA1与STA2进入backoff阶段，其首先需要从竞争窗口选择一个随机数，在802.11协议中，默认的初始竞争窗口为31，即随机回退计数值得范围即是[0,31]。在上图中，STA1则选择了8，而STA2选择2.
@@ -262,7 +262,7 @@ source发送RTS控制帧信息，其中包含NAV时间长度，当RTS发出来�
 
 如下图所示：
 
-![img](953a4645152850bc7fa9e05e5bacfec4_1440w.png)
+![img](Introduction 802.11 Mac.assets/953a4645152850bc7fa9e05e5bacfec4_1440w.png)
 
 ​		在正常情况下的第5步，AP没有成功接收节点的数据，或者AP对数据进行CRC校验错误，那么其不会反馈相应ACK给节点。节点在ACK timeout之后，则知道对方没有成功接收数据，该ACK timeout时间在理论分析时，一般与ACK接收时间相等，在具体工程设计中，可能会大一点点。那么发送错误的节点，**需要等待EIFS时间才可以再次接入信道，EIFS>DIFS，这样是为了避免一些较差的节点持续争抢信道资源。**比如图中STA 2即需要在等待EIFS之后，节点首先进行BEB（该机制我们后面详细讨论），然后重新开始backoff过程，而STA 1则直接在DIFS之后进行backoff。
 
@@ -270,7 +270,7 @@ source发送RTS控制帧信息，其中包含NAV时间长度，当RTS发出来�
 
 如下图所示：
 
-![img](57df82710936c7c3e11ca293a085fecc_1440w.png)
+![img](Introduction 802.11 Mac.assets/57df82710936c7c3e11ca293a085fecc_1440w.png)
 
 ​		在 **"等待"** DIFS后，STA 1与STA 2从各自的竞争窗口CW中选择一个随机数，不过碰巧的是，两者随机到了一样的数值，如图中，STA 1与STA 2都是随机到了3作为随机回退计数值。在经过3个slot time之后，由于两者同时倒数至0，那么意味着两者会同时发送数据，如图中的红色虚线框表示，在AP处由于两者信号互相干扰，从而都无法正确解码，从而CRC校验错误，即发生冲突。在冲突之后，即若AP处CRC校验失败，则不会给任意节点反馈ACK数据包，故两节点在ACK timeout之后（即总共等待EIFS之后，图中EIFS因为DIFS，这里暂未做修改），准备进入下一次竞争。
 
@@ -290,17 +290,17 @@ source发送RTS控制帧信息，其中包含NAV时间长度，当RTS发出来�
 
 如下图所示，一个AP和两个节点（STA1与STA2)。蓝色代表STA1的发送范围，绿色代表STA2的发送范围。
 
-<img src="963bf6b1ac0d5501cf81f0918a113d67_1440w.png" alt="img" style="zoom:50%;" />
+<img src="Introduction 802.11 Mac.assets/963bf6b1ac0d5501cf81f0918a113d67_1440w.png" alt="img" style="zoom:50%;" />
 
 ​		从图中，我们可以得知，由于两个节点的发送范围无法互相覆盖，从而两者在发送数据时，是无法通过物理监听的方法，探测对方是否有发送数据。从而按照我们之前所述的CSMA/CA机制，STA 1和STA 2一直会误认为信道空闲，从而不断倒数，当计时器到0时，则发送数据，如下图：
 
-<img src="ec3c65081032553d2c6bc724a9ff8fa6_1440w.png" alt="img" style="zoom:80%;" />
+<img src="Introduction 802.11 Mac.assets/ec3c65081032553d2c6bc724a9ff8fa6_1440w.png" alt="img" style="zoom:80%;" />
 
 ​		在上图中，由于STA 1与STA 2无法互相监听，即STA 2发送数据后，STA 1还继续进行backoff过程，从而继续倒数。当STA 1的随机回退计数值倒数至0时，STA 1也会发送数据。由于STA 1与STA 2的发送存在重叠区域，即也是发生了冲突，AP无法正确接收数据，即不会反馈ACK，最终这一轮传输失败。这一轮失败之后，STA 1与STA 2采用BEB算法重新选择随机数进行回退，但是由于两者没有办法互相监听，所以很容易再次出现同时传输的现象。所以在隐藏终端的情况下，网络性能最差时是无法传递数据包的，**换言之，STA 1与STA 2的吞吐量都趋近于0**。
 
 为了解决这个问题，故在DCF中，引入了RTS/CTS机制。RTS/CTS具体的工作方法如下：
 
-<img src="a66c3f592a3bc2f7d73da17a70001d76_1440w.png" alt="img" style="zoom:80%;" />
+<img src="Introduction 802.11 Mac.assets/a66c3f592a3bc2f7d73da17a70001d76_1440w.png" alt="img" style="zoom:80%;" />
 
 ​		在上图中，STA 2已经倒数至0，其首先发送RTS数据帧给AP。若在AP处没有冲突，即AP成功解调出STA 2的RTS，AP会在等待SIFS之后发送CTS帧给STA 2。由于无线信道是一个广播信道，要是帧没有加密的话，那么所有节点都是可以解析其信息的，所以这里AP虽然是发送CTS给STA 2，不过STA 1也可以解析该CTS信息，这也是很多书上写，RTS/CTS都是一个广播过程的原因。
 
@@ -309,7 +309,7 @@ source发送RTS控制帧信息，其中包含NAV时间长度，当RTS发出来�
 
 RTS/CTS工作机制对应的时序图如下：
 
-<img src="image-20221122230005977.png" alt="image-20221122230005977" style="zoom:67%;" />
+<img src="Introduction 802.11 Mac.assets/image-20221122230005977.png" alt="image-20221122230005977" style="zoom:67%;" />
 
 ​		在上图中，我们可以发现，NAV的部分和我们在CSMA/CA的流程图中的Busy medium是一样的，其区别在于一者是物理载波监听（即之前的Busy medium是由于物理载波监听所引起的），而另者是虚拟载波监听（即NAV是由虚拟载波监听所引起的）。
 
@@ -325,7 +325,7 @@ RTS/CTS工作机制对应的时序图如下：
 
 ​		暴露终端问题可以简单定义为：节点之间能够互相监听对方。但其可以同时传输时，其不传输，从而造成浪费。**暴露终端在多个AP（或者多个Receiver）时才有可能发生。**（Note，**此场景在WiFi6 有提出SR，以及WiFi7提出cosr**来进行解决，后续会详细讲解解决此问题的方法）
 
-​													<img src="9ea9c3f9db8cc2eef466de2eecb45787_1440w.png" alt="img" style="zoom:50%;" />
+​																								<img src="Introduction 802.11 Mac.assets/9ea9c3f9db8cc2eef466de2eecb45787_1440w.png" alt="img" style="zoom:50%;" />
 
 ​		在该拓扑中，STA 1与STA 2为两个节点，其中STA 1关联在AP1上，STA 2关联在AP2上。图中蓝色虚线代表STA 1的发送范围，绿色虚线代表STA 2的发送范围。
 
@@ -335,7 +335,7 @@ RTS/CTS工作机制对应的时序图如下：
 
 **物理载波监听引起的暴露终端**
 
-<img src="08d8409c470363a52371efb3b790bc6d_1440w.png" alt="img" style="zoom:67%;" />
+<img src="Introduction 802.11 Mac.assets/08d8409c470363a52371efb3b790bc6d_1440w.png" alt="img" style="zoom:67%;" />
 
 ​		如上图所示，由于STA 1与STA 2可以互相监听。由于STA 2选择了较小的随机数进行倒数，从而其最先倒数至0，并进行发送。当STA 2首先发送数据包给STA 2后，STA 1监听信道为忙状态，从而无法发送信息。故根据拓扑而言，STA 1是可以传数据给AP1的，但是由于监听STA 2正在传输，导致信道忙，故STA1悬挂随机倒数计数器，无法继续倒数，从而无法传输。
 
@@ -343,7 +343,7 @@ RTS/CTS工作机制对应的时序图如下：
 
 **虚拟载波监听引起的暴露终端**
 
-<img src="4c54619ebf62ea3e20b113b0f7dc18e5_1440w.png" alt="img" style="zoom:67%;" />
+<img src="Introduction 802.11 Mac.assets/4c54619ebf62ea3e20b113b0f7dc18e5_1440w.png" alt="img" style="zoom:67%;" />
 
 ​		如上图所示，在暴露终端场景中，若STA 2不仅选择了较小的随机数进行优先倒数，并且其发送的数据包是RTS数据包。当STA 1识别到该RTS数据包后，其就会被设置为NAV状态，无法在后面的过程主动竞争信道，进而无法传输。与之前描述用RTS/CTS解决隐藏终端问题时不同，在解决隐藏终端问题中，NAV是由AP所反馈的CTS帧所进行保护。而这里由于STA 1与STA 2能够互相监听，换言之，在暴露终端情况下，STA 1的NAV是被STA 2所发送的RTS帧进行保护的。在STA 1被NAV保护后，其也无法传输，最终导致暴露终端问题。
 
@@ -355,9 +355,8 @@ RTS/CTS工作机制对应的时序图如下：
 
 - 动态带宽分配。
 
-- 对于11g（ERP）STA，需要保护不知道什么是OFDM的11（非ERP）,考虑到向后兼容性，11g STA可以检测到11b，而相反则不成立。在11g STA之间交换RTS/CTS，11Mbps的11b速率将使11b STA知道信道是否被占用。在Beacon框架中，有ERP元素，它指示BSS中是否有任何11b（非EPR）STA，这将帮助11g STA了解
+- 对于11g（ERP）STA，需要保护不知道什么是OFDM的11（非ERP）,考虑到向后兼容性，11g STA可以检测到11b，而相反则不成立。在11g STA之间交换RTS/CTS，11Mbps的11b速率将使11b STA知道信道是否被占用。在Beacon框架中，有ERP元素，它指示BSS中是否有任何11b（非EPR）STA，这将帮助11g STA了解BSS中存在11b STA。
 
-  BSS中存在11b STA。
 
 ## 5 802.11 MAC EDCA
 
