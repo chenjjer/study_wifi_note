@@ -197,7 +197,7 @@ Node2可以与Node3通信，node3与node4通信，对于节点1来说，节点3�
 
 而CSMA/CA提供一种规避机制，它的流程如下图所示，其中相应的帧间间隔已经说明，但还有几个概念需要说明。
 
-![image-20221122163903933](Introduction 802.11 Mac.assets/image-20221122163903933.png)
+![image-20221124133130246](./Introduction%20802.11%20Mac.assets/image-20221124133130246.png)
 
 - contention window
 
@@ -369,9 +369,83 @@ RTS/CTS工作机制对应的时序图如下：
 
 ## 5 802.11 MAC EDCA
 
+​		在最新的协议规范中，已经讲802.11e加入到802.11-2020版本，802.11e 常见的称为质量服务简称Qos（quality of service），它新增了一种媒介竞争访问方式，就是之前提到的HCF (hybrid coordination function)。802.11e中，其e的含义即是增强的MAC层（enhancements to the MAC layer，参考《The Innovation Journey of Wi-Fi》）。
+
+### 5.1 EDCA简介
+
+​		HCF是在DCF模式的基础上新添加的一种竞争方式，主要包括EDCA和HCCA.在日常手机终端中，经常提到竞争抢网wmm参数，这里可以大致认为802.11e和wmm是同一事物，只是定义不同，如果考虑细节部分，wmm是EDCA这块分支，HCC部分则与WMM是没有兼容的，考虑到日常功能的使用新，后面都是介绍EDAC部分。
+
+![img](./Introduction%20802.11%20Mac.assets/v2-11c411e46e485b173284d9d6dac3ef60_1440w.webp)
+
+​		在实际使用过程中一般把Qos模型简化为两个步骤：
+
+1. 抓取流量，即对流量进行优先级分类，打标签，存储
+2. 设置策略，按照不同的传输规则对不同类型的流量进行传输调度
+
+​		802.11最初没有提供服务区分，所有的流量都被视为best-effort流量。现在为了提供优先级，我们要对数据流量进行分类。当数据包到达MAC层时，根据802.1d的映射关系，将原始数据包中的优先级映射到802.1e的不同优先级队列中。如下图
+
+<img src="./Introduction%20802.11%20Mac.assets/image-20221124101640844.png" alt="image-20221124101640844" style="zoom:67%;" />
+
+根据上图所示，802.11e提供4种不同的优先级，也可以称为接入类别（Access categories），从高到低的排序分别是：
+
+- **语音服务（Voice，AC_VO）**：一般为VoIP流量类型，对延迟最为敏感，同时也是优先级最高的流量。
+- **视频服务（Video，AC_VI）**：视频流量的优先级低于语音服务，高于其他两项。视频服务也是延迟敏感类型的服务，所以具有一定的优先级。
+- **尽力传输（Best-effort，AC_BE）**：默认的无线流量类型就是best-effort类型，比如网页访问的数据流量类型。对于延迟有一定需求，但是没有那么敏感。
+- **背景流量（Background，AC_BK）**：对于延迟要求最不敏感的流量，比如文件传输，打印作业的流量。
+
+根据上述规则，整理表格如下图所示
+
+![image-20221124103001905](./Introduction%20802.11%20Mac.assets/image-20221124103001905.png)
+
+优先级不同设置AIFS的时间不同，具体事时间如下图左边所示：
+
+![image-20221124102804706](./Introduction%20802.11%20Mac.assets/image-20221124102804706.png)
+
+上图可能在计算具体的时间可能比较	
+
+![image-20221124104705152](./Introduction%20802.11%20Mac.assets/image-20221124104705152.png)
+
+定义如下表格所示：	
+
+| AC    | CWmin            | CWmax            |
+| ----- | ---------------- | ---------------- |
+| AC_BK | aCWmin           | aCWmax           |
+| AC_BE | aCWmin           | aCWmax           |
+| AC_VI | (aCWmin +1)/2 -1 | aCWmin           |
+| AC_VO | (aCWmin +1)/4 -1 | (aCWmin +1)/2 -1 |
+
+​		因为在802.11e中引入的txop，实际上是“竞争一次，获得一段传输时间”，协议的说法为“duration based transmission”，即节点竞争成功后，其获得一段信道使用时间，在这段时间内，其可以传输多个数据帧。这种传输方式也经常用“burst”这个词描述。如下图所示：
+
+<img src="./Introduction%20802.11%20Mac.assets/image-20221124104238019.png" alt="image-20221124104238019" style="zoom:50%;" />
+
+具体时间如下：
+
+| AC    | CWmin | CWmax | MaxTXOP |
+| ----- | ----- | ----- | ------- |
+| AC_BK | 15    | 1023  | 0       |
+| AC_BE | 15    | 1023  | 0       |
+| AC_VI | 7     | 15    | 3.008ms |
+| AC_VO | 3     | 7     | 1.504ms |
+
+	### 5.2 EDCA Setting and check
+
+​		802.11e 标准为每个 AC 定义了默认的 TXOP 限制值，但这些值可以在 AP 上配置。TXOP 限制以32µs（微秒）为间隔设置。OFDM的AC_VO (47×32= 1504µs )默认 TXOP 为47 。AC_VI为94 ( 94×32= 3008µs )。请注意，对于AC_BE 和 AC_BK，始终将 TXOP 设置为0，换句话说，这些流量类别始终必须一次发送一帧（无 CFB）。
+
+![CWAP - 争用 02](./Introduction%20802.11%20Mac.assets/cwap-contention-02.png)
 
 
-## reference
+
+在检查WMM参数设置，可以参考sniffer中体现如下：
+
+![img](./Introduction%20802.11%20Mac.assets/cwap-contention-09.png)
+
+另外在解决WFD问题，以及vowifi的问题过程中，在抓取对比机还需要确认Qos的类型。它的定义如下：
+
+![image-20221124134613392](./Introduction%20802.11%20Mac.assets/image-20221124134613392.png)
+
+![image-20221124135832064](./Introduction%20802.11%20Mac.assets/image-20221124135832064.png)
+
+## 5. reference
 
 1. https://zhuanlan.zhihu.com/p/51412066
 2. https://zhuanlan.zhihu.com/p/20721272
@@ -379,6 +453,8 @@ RTS/CTS工作机制对应的时序图如下：
 4. https://zhuanlan.zhihu.com/p/20731045
 5. 802.11无线网络指南
 6. 802.11-2022 WiFi spec
+7. 802.11e-2005 spec
+8. https://mrncciew.com/2014/10/12/cwap-802-11-medium-contention/
 
 
 
