@@ -308,3 +308,68 @@ Null Frame：
 - APs never enter power-saving mode and do not send Null frame
 
 ![image-20221201195703021](Introduction to Wi-Fi Header and Information Elements.assets/image-20221201195703021.png)
+
+### 3.2 Control Frame
+
+​		Control Frame常见的帧类型如下：
+
+![image-20221202170336654](Introduction to Wi-Fi Header and Information Elements.assets/image-20221202170336654-1669971818296-1.png)
+
+下面将以RTS/CTS 以及ACK为例介绍控制帧相关内容。
+
+#### 3.2.1 RTS/CTS
+
+RTS的帧格式如下图所示：
+
+![image-20221202170515852](Introduction to Wi-Fi Header and Information Elements.assets/image-20221202170515852.png)
+
+- Duration（unit:us)
+
+  3 SIFS + 1 CTS + 1 Ack + 1 Frame
+
+  ![image-20221202171023873](Introduction to Wi-Fi Header and Information Elements.assets/image-20221202171023873.png)
+
+- RA
+
+  the address of the STA that is the intended recipient of the pending frame.
+
+- TA
+
+  the address of the STA transmitting the RTS frame.
+
+CTS的帧格式如下图所示：
+
+![image-20221202171149880](Introduction to Wi-Fi Header and Information Elements.assets/image-20221202171149880.png)
+
+- Duration（unit：us）
+
+  RTS Duration - 1 SIFS - 1 CTS
+
+  ![image-20221202171820605](Introduction to Wi-Fi Header and Information Elements.assets/image-20221202171820605.png)
+
+他们的sniffer抓包显示如下：
+
+![image-20221202171928085](Introduction to Wi-Fi Header and Information Elements.assets/image-20221202171928085.png)
+
+#### 3.2.2 ACK
+
+​		由于802.11通信使用的无线介质无法确保数据传输成功，发送端只能依靠接收端的通知来判断传输的帧是否已正确接收。它的帧格式如下：
+
+![image-20221202172432375](Introduction to Wi-Fi Header and Information Elements.assets/image-20221202172432375.png)
+
+- Duration
+  - More Fragments bit = 0 (non-fragment/final fragment)
+  - More Fragments bit = 1 ---> Fragment duration - 1 Ack - 1 SIFS(Virtual CTS)
+
+![image-20221202172732821](Introduction to Wi-Fi Header and Information Elements.assets/image-20221202172732821.png)
+
+- RA
+
+  Copied from the transmitter of the frame being acknod
+
+它的sniffer抓取显示如下：
+
+![image-20221202172917151](Introduction to Wi-Fi Header and Information Elements.assets/image-20221202172917151.png)
+
+### 3.3 Management Frame
+
