@@ -25,6 +25,8 @@
 
 ### 1.2 802.11 Security History
 
+​		802.11 Security历史表如下：
+
 | 802.11 Standard | Wi-Fi Alicance Certification       | Authentication                 | Encryption Method                   | Cipher                            | Key Generation |
 | --------------- | ---------------------------------- | ------------------------------ | ----------------------------------- | --------------------------------- | -------------- |
 | 802.11 legacy   |                                    | Open system or Shared Key      | WEP                                 | RC4                               | Static         |
@@ -32,7 +34,7 @@
 |                 | WPA-Enterprise                     | 802.1X/EAP                     | TKIP                                | RC4                               | Dynamic        |
 | 802.11-2007     | WPA2-Personal                      | WPA2 Pass-phrase               | CCMP(mandatory)                     | AES(mandatory)                    | Dynamic        |
 | 802.11-2007     | WPA2-Enterprise                    | 802.1X/EAP                     | CCMP(mandatory)<br />TKIP(optional) | AES(mandatory)<br />RC4(Optional) | Dynamic        |
-| 802.11-2018     | WPA3-Personal<br />WPA3-Enterprise |                                | GCMP-256                            | AES                               | SAE handshake  |
+| 802.11-2018     | WPA3-Personal<br />WPA3-Enterprise | SAE                            | GCMP-256                            | AES                               | SAE handshake  |
 
 
 
@@ -40,9 +42,35 @@
 
 ## 2. Legacy 802.11 Security
 
+​		802.11无线加密技术从1997年发布至今，已经有很多重大的改变，根据802.11-2020 spec规定，传统加密技术或者pre-RSNA(Open System authorization，Shared Key authorization and WEP encryption) 依然有被定义到，即使Spec中也明确提出要避免使用Lengacy 802.11 Security，它们仍然被集成到大多数(如果不是所)802.11设备中，以提供与现有设备的向后兼容性。理解这些安全方法、理解为什么开放系统身份验证仍然有效以及为什么应该避免共享密钥身份验证和WEP加密是很重要的。
+
 ### 2.1 Authentication
 
+​		802.3的设备需要与其他设备进行连接交互，只需要两者通过网线插口连接好即可，而802.11无线网络的设备端与接入端的认证，只是他们连接的第一步。在802.11-2007中有提到两种认证方式：Open Sytem authentication 和Shared Key authentication。
+
 #### 2.1.1 Open System Authentication
+
+ 		open system authentication是在当前spec中802.11-2020中没有被废弃的加密机制。因为它的交互方式简单，在常见的使用场景中也不需要加密方式去验证对比以排查问题，开发系统认证它的工作流程如下图所示：
+
+<img src="Introduction Wi-Fi security.assets/image-20221209225555280.png" alt="image-20221209225555280" style="zoom:50%;" />
+
+​		如上述图所示 open system authentication client与AP之间只有4帧的交互，其中STA可以通过passive 或者active scan 发现AP。通过sniffer来抓取他们的具体交互信息
+
+![img](Introduction Wi-Fi security.assets/cwsp-wep-03.png)
+
+在上述1246行帧中
+
+![CWSP-WEP-04](Introduction Wi-Fi security.assets/cwsp-wep-04.png)
+
+*(wlan.fc.type == 0)&&(wlan.fc.type_subtype == 0x0b)* 通过wireshark 可以看到 authentication Algorithm是open system，序列号是1代表auth request，然后AP回复authentication response，Authenticaion SEQ变为2
+
+![CWSP-WEP-05](Introduction Wi-Fi security.assets/cwsp-wep-05.png)
+
+然后Cline发起assoc request后，AP回复assoction response并返回连线结果，如下图所示：
+
+![CWSP-WEP-07](Introduction Wi-Fi security.assets/cwsp-wep-07.png)
+
+
 
 #### 2.1.2 Shared Key Authentication
 
