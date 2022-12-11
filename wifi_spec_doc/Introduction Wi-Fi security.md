@@ -155,7 +155,7 @@ WEP加密步骤如下：
 
 ![img](Introduction Wi-Fi security.assets/SouthEast.jpeg)
 
-**非对称算法**：采取加密钥匙和解密是采用不同的方式。可以表现如下图所示：
+**非对称算法**：非对称算法使用一对密钥，一个用于加密，另一个用于解密。解密密钥是保密的，称为私钥，加密密钥是共享的，称为公钥。可以表现如下图所示：
 
 <img src="Introduction Wi-Fi security.assets/image-20221210155213830.png" alt="image-20221210155213830" style="zoom:50%;" />
 
@@ -177,7 +177,7 @@ AES算法是Advanced Encryption Standard 的缩写，是美国联邦政府采用
 
 ### 3.2 WLAN Encryption Methods
 
-​		802.11-2007标准定义了三种工作在OSI模型L2的加密方法:WEP、TKIP和CCMP。这些第2层加密方法所保护的信息是在第3 -7层中找到的数据。第二层加密方法用于为802.11数据帧提供数据隐私。
+​		802.11-2007标准定义了三种工作在OSI模型L2的加密方法:WEP、TKIP和CCMP，后来在新增的协议中802.11-2020新增了BIG以及GCMP算法，这些第2层加密方法所保护的信息是在第3 -7层中找到的数据。第二层加密方法用于为802.11数据帧提供数据隐私。
 
 ​		802.11数据帧的技术名称是MAC协议数据单元(MPDU)。如图所示，
 
@@ -187,21 +187,182 @@ AES算法是Advanced Encryption Standard 的缩写，是美国联邦政府采用
 
 ​		802.11-2007标准规定，MSDU有效负载可以是0到2304字节的任何地方。由于加密开销，帧体实际上可能更大。采用WEP、TKIP、CCMP等专有的二层加密方法对802.11数据帧的MSDU有效载荷进行加密。因此，信息即是被保护的是上面的3 -7层，也就是通常所说的IP数据包。
 
-#### 3.2.1 TKIP
+#### 3.2.1 TKIP （Temporal Key Integrity Protocol)
+
+​		TKIP（临时密钥完整性协议）是第一种广为使用的L2加密方法，它是为解决WEP相关的弱点提出来的，2003年WPA(Wi-Fi Protected Access), TKIP是必选的，但随着加密算法的更新，在802.11-2007之后，TKIP变为可选项。
+
+​		TKIP解决WEP的以下问题
+
+- 临时密钥---增强抵御网络攻击能力
+- 排序 --- 击败重放和注入攻击
+- 密钥混合 --- 改善已知的IV冲突和弱密钥攻击
+- 增强数据的完整性（MIC) --- 改善位翻转和伪造攻击风险
+- TKIP --- 解决 TKIP MIC的限制
+
+TKIP加密流程图如下所示：
+
+![image-20221211175119118](Introduction Wi-Fi security.assets/image-20221211175119118.png)
+
+​		根据Spec可以知道，在加密阶段会生成48位TKIP序列计数器（TSC)并分成6个8字节（TSC0-TSC5)，第一阶段密钥将128位临时密钥（TK）与TSC2~5以及传输地址（TA）混合后输出TTAK(TKIP-mixed transmit address & key), 在第二阶段将把TTAK，TSC0~1以及TK进行混合后，输出WEP Seed，它包含初始化向量IV和104位WEP密钥，输出的WEP Seed将采用ARC4加密算法生成密钥流。生成的密钥流最后和明文数据,MIC以及ICV通过XOR组合生成对应的加密数据。
+
+​		MIC Key：它是从TK中取出来的指定位，spec中规定
+
+A STA shall use bits 128–191 of the temporal key **as theMichael key** for MSDUs from the Authenticator’s STA to the Supplicant’s STA.
+A STA shall use bits 192–255 of the temporal key **as the Michael key** for MSDUs from the Supplicant’s STA to the Authenticator’s STA.
+
+​	从加密流程来看，TKIP相对于WEP主要是多了左半部分，右半部分的内容其实大同小异，从MPDU的内容来看，主要多了extender IV和MIC两个部分。下面是基本过程：
+
+1. TKIP使用消息完整性代码 MIC，MIC使用DA、SA、MSDU优先级和明文数据计算得出，它的字节大小为8字节，标记为M0-M7.TKIP采用的MIC仅包含20位的有效安全强度，很容易受到brute-force攻击，所以802.11标准定义TKIP countermeasures，步骤如下图所示：
+
+   1. MIC故障将被记录
+
+   2. 如果在60s内发生两次MIC故障，STA或AP必须禁用所有TKIP帧的接收60s
+
+   3. Key refresh-PTK & GTK 需要改变
+
+      <img src="Introduction Wi-Fi security.assets/20161002104713863.png" alt="img" style="zoom: 67%;" />
+
+      
+
+2. MIC追加到MSDU尾部后，将他们看成一个新的"MSDU"，如果有开启分布功能，而且符合分片要求，就会对"MSDU"进行分片，比如分成两片，那么plaintext MSDU和MIC就可能分别组装在两个MPDUS中进行发送，接收端会将这些MPDUS进行重组，生成原来的"MSDU"，因此帧的分片对MSDU的加密影响不大。
+
+   Note：如果MSDU过大，需要多个MPDU中进行发送，使用TKIP加密时，会使用相同的extender IV，但每一个MPDU会分别使用一个单调递增的TSC。
+
+3. MSDU经过封装，生成没有加密的 plaintext MPDU，同WEP一样经过计算生成 ICV，并将它追加到 plaintext MPDU的尾部。
+
+4. TKIP通过phase1和phase2两个key mixing阶段生成WEP seed。
+
+5. TKIP将上面得到的WEP IV和ARC4 key作为WEP seed通过ARC4算法生成keystream（请对照WEP加密）
+
+6. 最后将keystream，plainte MPDU，ICV，IV（TSC０，TSC１ Key ID），extended IV， MIC进行异或计算生成最后用于发送的Encrypted MPDU
+
+经过TKIP加密以后生成的加密MPDU格式如下：
 
 <img src="Introduction Wi-Fi security.assets/image-20221210162843326.png" alt="image-20221210162843326" style="zoom: 50%;" />
 
+从图中可以看到，该帧主要由802.11 MAC Header（前32个字节）、Frame Body 和CRC三个部分构成，Frame Body部分主要由以下5部分组成：
 
+（a）IV/Key ID
+（b）Extended IV
+（c）MSDU payload
+（d）MIC
+（e）ICV
 
-<img src="Introduction Wi-Fi security.assets/image-20221210163304752.png" alt="image-20221210163304752" style="zoom:50%;" />
+1. 第一部分是802.11 MAC Header（前32个字节），可以看出头部并没有作任何改动
 
-<img src="Introduction Wi-Fi security.assets/image-20221210163331577.png" alt="image-20221210163331577" style="zoom:50%;" />
+2. IV/Key ID : 它的长度是4个字节，和WEP加密中的IV长度一样，但是其中的内容并不一样，它的前三个字节分别是TSC1，WEP Seed和 TSC0 (TSCn后面分析)；最后一个字节分别由Reserved（5bit），EXT IV 1bit，Key ID 2bit； EXT IV是用来指定是否传送后面的Extended IV，对于WEP来说不需要这部分，所以设为0，对于TKIP加密来说，Extended IV是必须的，所必须设为1；Key ID需要根据帧封装的加密算法来设，它一般都是由MLMESETKEYS.request 原语完成，它是key index缩写，是从WEP继承而来的，在WEP中可以用于指定使用第几个key，但是在TKIP中一般设为0，在没有key mapping key时候，不能够使用<RA,TA> pair 来鉴别要用哪个key，这时会用到这个默认的key 0。、
+
+   TSC5是最高有效位，而TSC0是最低有效位，因为TSC0-TSC5是从6个字节长的TSC派生而来的（MSB是Most Significant Bit的缩写，最高有效位。在二进制数中，MSB是最高加权位。与十进制数字中最左边的一位类似。通常，MSB位于二进制数的最左侧，LSB位于二进制数的最右侧）。
+
+3. Extended IV： 它的长度4个字节，它是从48-bit TKIP sequence counter (TSC2 through TSC5)派生而来的；从图中可以看出IV/Key ID和Extended IV字段都是没有加密的，我们也可将这两个字段一共8个字节看成TKIP的头部
+
+4. 接下来是加密的payload MSDU
+
+5. MSDU后面是MIC，8个字节，当它追加到MSDU后面时，就成了MSDU的一部分，用于后面的MPDU分片
+
+6. Frame Body的最后是Integrity Check Value （ICV），4个字节，它是通过计算整个MPDU而来的。MSDU upper-layer payload和 MIC及ICV一样，都有进行加密
+
+7. 帧的最后一部分是CRC，它是4个字节的FCS，它是通过计算全部的帧头和帧体部分得来的（calculated over all the fields of the header and frame body ）
+
+由于额外的IV（4字节），Extended IV（4字节），MIC（8字节）和ICV（4字节），一共20个字节。也就是说TKIP加密额外的给数据帧体添加了20个字节，那么TKIP加密的数据帧中MSDU‘　的最大值将会达到2324字节（802.11规定一个帧中MSDU的最大size是2304字节）。
+
+抓包查看iv向量是符合TSC递增的规律的。
+
+![img](Introduction Wi-Fi security.assets/20161006110556140.png)
+
+![img](Introduction Wi-Fi security.assets/20161006110559883.png)
 
 #### 3.2.2 CCMP
 
-<img src="Introduction Wi-Fi security.assets/image-20221210163006619.png" alt="image-20221210163006619" style="zoom: 50%;" />
+​		CCMP（Counter Mode with Cipher Block Chaining Message Authentication Code Protocol)是具有密码块链接消息身份验证代码协议的计数器模式，它是使用的AES加密算法，而AES是基于Rijindael算法的分组密码，此算法允许选择块大小和密钥大小（每个128,192和256位），IEEE 802.11-2007规定将密钥大小和块长度限制为128位。CCMP加密在802.1i修正案中定义，用于取代TKIP和WEP加密。在CCMP加密使用的AES算法中都是使用的128bit的密钥和128bit的加密块,关于CCM的定义请参考《IETF RFC 3610 》。
+
+ CCM主要有两个参数：
+
+​		M=8,表示MIC是8个字节；L=2，表示长度域是两个字节一共16位，这样就可以满足MPDU最大的长度。同时CCM需要给每个session指定不同的temporal key，而且每一个被加密的MPDU都需要一个指定的临时值，所以CCMP使用了一个48bit的PN（packet number），对同一个PN的使用将会使安全保证失效。
+
+CTR（CounterMode ）：用于提供数据保密性
+
+CBC（Cipher-Block Chaining ）
+
+CBC-MAC（Cipher-Block Chaining Message Authentication Code ）：用于认证和完整性
+
+下图为CCMP的加密过程：
 
 <img src="Introduction Wi-Fi security.assets/image-20221210163516079.png" alt="image-20221210163516079" style="zoom:50%;" />
+
+- MAC header
+
+  802.11 MAC头部
+
+- Plaintext data
+
+  需要发送的playload
+
+- PN(packet number)
+
+   长度为128bit，它和TKIP中TSC（TKIP Sequence number)相似，它是每个帧的标识，而且会随着帧的发送过程不断递增，可以防止回放和注入攻击
+
+- TK（temporal key）
+
+  和TKIP中的一样，CCMP也有一个128bit的TK，可能是PTK或者GTK，两者分别用于单播数据和组播数据加密。
+
+- Key ID
+
+  用于指定加密用的key,注意这个ID是index的缩写，一般设为0
+
+- Nonce
+
+  是一个随机数，而且只生成一次，它一共长104bit，是由PN(packet number，48bit), Qos中的优先级字段（8bit）和TK(transmitter address , 48bit)这三个字段组合来的，需要注意，不要和4路握手的Nonce混淆。
+
+  Nonce由13个自己构成，它的组成如下，
+
+  <img src="Introduction Wi-Fi security.assets/20161005095841360.png" alt="img" style="zoom: 80%;" />
+
+  其中Nonce Flags一共8位，主要内容如下：
+
+  <img src="Introduction Wi-Fi security.assets/20161005100006939.png" alt="img" style="zoom:80%;" />
+
+  - Priority subfield ：如果没有支持Qos Control，那么这个位置0；如果由支持Qos Control，那么这个需要根据QC TID设成0-3
+  - Management field ：如果是管理帧，这个位置1
+  - Reserved：保留位清0
+
+  
+
+- AAD (Additional authentication data)
+
+  由MPDU的头部构建而来的，它用于确保MAC头部的数据完整性，接收端会使用这个字段来检验MAC头部。如下图所示：
+
+  <img src="Introduction Wi-Fi security.assets/20161005084300716.png" alt="img" style="zoom:67%;" />
+
+  其中深灰色的部分会被用来构建ADD，而且会被CCM保密，其中一些浅灰色的也会用于构建AAD，根据帧的类型不同，其中一些字段可能没有使用，那么就会用0覆盖。这样计算出来的MIC，不仅确保了MAC Header的完整性，也确保了frame body的完整性，而且所有的MAC address（包括BSSID）都有受到保护，同时MAC Header的其他一些域也有受到保护。接收端也会对这些受保护的MAC Header进行完整性校验，比如frame type and the distribution bits两个位是受保护的，那么接收端就会对这两个受保护的位进行校验，需要注意的是，AAD并不包括MAC头部的Duration 字段，因为在正常的IEEE 802.11 操作中，Duration 字段是会随时变动的。**MAC头部的一些会动态改变的子域就不会纳入AAD的构建而以0进行覆盖**
+
+  ![img](Introduction Wi-Fi security.assets/20161005094438120.png)
+
+  通常在Frame Control域中的一些子域，Sequence Control域和Qos Control 域会覆盖为0，比如QC或者AE,因此这些域不会受到保护，比如Retry bit and Power Management bits不会受到保护。
+
+  下面是Spec中详细介绍AAD所使用的主要字段：
+
+  ![image-20221211231836813](Introduction Wi-Fi security.assets/image-20221211231836813.png)
+
+下面是加密流程：
+
+1. 每一个新的MPDU需要发送时，都会重新创建一个48bit的PN，如果是重传的MPDU，则使用原来发送MPDU的PN
+2. 利用MPDU头部构建AAD.
+3. 每一个新的MPDU需要发送时，都会重新创建一个48bit的PN，如果是重传的MPDU，则使用原来发送MPDU的PN.
+4. 构建8个字节的8-octet CCMP 头部，这个头部由Key ID 和PN构成，PN有被分成6个字段。你会发现它和8个字节的TKIP头部很相似
+5. 使用temporal key, AAD, nonce, and MPDU data 作为输入和AES clock cipher 算法，生成8个字节的MIC和加密的MSDU，这个过程叫CCM originator processing
+6. 将CCMP头部追加到MAC头部后面，尾随的是加密的MSDU和加密的MIC。接下来的是FCS，它是通过计算全部的头部的帧体而来，也就是计算FSC字段前面的所有字段，没有CRC字段，或者说CRC字段被FCS字段给覆盖了
+
+加密完成后的图片如下所示：
+
+<img src="Introduction Wi-Fi security.assets/image-20221210163006619.png" alt="image-20221210163006619" style="zoom: 50%;" />
+
+​		从图中可以看到，前32个字节的MAC头部并没有任何变化，帧体由三个部分构成，CCMP Header + MSDU Payload + MIC , 其中CCMP的头部由Key ID和PN构成（PN被分为6个字段，分别放置）。CCMP的头部是没有被加密的，有加密的部分是MSDU Payload和MIC。
+
+​		CCMP头部（8字节）和MIC（8字节）部分是基于原来的帧多出部分，当开启CCMP加密的时候，那么MPDU的frame body部分将会增大16个字节，这样所允许的最大frame body将是2304+16=2320个字节。
+
+​		通过上面的分析，我们可以看出，TKIP加密是基于MSDU的加密，而CCMP加密是基于MPDU的加密，这样就避免了针对MSDU的攻击，解决了在MSDU加密中不能解决的问题。
+
 
 #### 3.2.3 BIP
 
@@ -270,6 +431,8 @@ AES算法是Advanced Encryption Standard 的缩写，是美国联邦政府采用
 1. https://blog.csdn.net/u014294681/article/details/86690241
 2. https://blog.csdn.net/wangbaochu/article/details/44199089
 3. https://blog.csdn.net/rachel_4869/article/details/80128703
+4. https://www.likecs.com/show-203360773.html
+5. https://blog.csdn.net/lee244868149/article/details/52701703
 
 
 
