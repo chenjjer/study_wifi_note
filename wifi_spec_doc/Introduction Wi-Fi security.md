@@ -342,7 +342,7 @@ CBC-MAC（Cipher-Block Chaining Message Authentication Code ）：用于认证�
 
   下面是Spec中详细介绍AAD所使用的主要字段：
 
-  ![image-20221211231836813](Introduction Wi-Fi security.assets/image-20221211231836813.png)
+  <img src="Introduction Wi-Fi security.assets/image-20221211231836813.png" alt="image-20221211231836813" style="zoom: 67%;" />
 
 下面是加密流程：
 
@@ -368,9 +368,62 @@ CBC-MAC（Cipher-Block Chaining Message Authentication Code ）：用于认证�
 
 #### 3.2.4 GCMP
 
-<img src="Introduction Wi-Fi security.assets/image-20221210163758877.png" alt="image-20221210163758877" style="zoom:50%;" />
+​		802.11ad-2012修订规范了使用AES加密技术的Galois/Counter Mode Protocol (GCMP)的使用。802.11ad定义的极高的数据速率需要GCMP，因为它比CCMP更有效。GCMP也被认为是802.11ac无线电的可选加密方法。CCMP使用128位AES密钥，而GCMP可以使用128位或256位AES密钥。当前的GCMP不能向后兼容。
+
+​		GCMP基于AES加密算法的GCM。GCM保护802.11数据帧主体和802.11报头的选定部分的完整性。GCMP计算可以并行运行，并且计算强度小于CCMP的加密操作。GCM明显比CCM更高效、更快。与CCM一样，GCM使用相同的AES加密算法，尽管应用方式不同。
+
+​		CMP每个块只需要一个AES操作，立即将加密过程减少一半。此外，GCM不将区块链接或链接在一起。由于每个块都不依赖于前一个块，所以它们彼此独立，可以使用并行电路同时处理。
+
+GCMP的加密流程如下图所示：
 
 <img src="Introduction Wi-Fi security.assets/image-20221210163817614.png" alt="image-20221210163817614" style="zoom:50%;" />
+
+- MAC header
+
+  802.11 MAC头部
+
+- Plaintext data
+
+  需要发送的playload
+
+- AAD
+
+  与CCMP的AAD组成模式一样
+
+- Nonce
+
+  此字节字段大小位12字节，其结构如下：
+
+  <img src="Introduction Wi-Fi security.assets/image-20221212195510997.png" alt="image-20221212195510997" style="zoom:50%;" />
+
+  A2：此标志位为MAC Header里面的Address 2 field
+
+  PN: Packet number，其中PN0是放在最后字节的。
+
+- PN proocessing
+
+  每增加一个MPDU, PN就增加一个正数。对于碎片化msdu和mmpdu的组成mpdu, PN以1为单位递增（这里与CCMP对于分配MSDU过程引起的处理方式是一样的，对于使用同一临时密钥的一系列加密mpdu, PN永远不会重复。
+
+- GCMP Header
+
+  由Keyid 和 PN组成的头文件
+
+加密流程如下所示：
+
+1. 增加PN，为每个MPDU获得一个新的PN，增长的速度位1，这样PN就不会为相同的临时键重复。
+2. 使用MPDU报头中的字段为GCM构造额外的身份验证数据(AAD)。
+   GCM算法为AAD中包含的字段提供完整性保护。MPDU报头字段在重传时可能会改变，在计算AAD时被屏蔽为0。
+3. 通过A2和明文数据构建出GCM Nonce块。
+4. 通过Key ID和PN构建出GCMP Header。
+5. 利用AAD，Nonce，临时密钥（TK）,明文数据以及MIC进行GCM加密
+6. 最后在把MAC header， GCMPheader 以及加密后的data组合成GCMP的帧
+
+经过加密后的GCMP的MPDU帧字段如图所示：
+
+<img src="Introduction Wi-Fi security.assets/image-20221210163758877.png" alt="image-20221210163758877" style="zoom:50%;" />
+
+​		GCMP处理将原始MPDU大小扩展了24个字节，GCMP报头字段扩展了8个字节，MIC字段为16字节。GCMP报头字段是由PN和Key ID子字段构造的。48位的PN表示为一个包含6个八位字节的数组。PN5是PN中最重要的八位元，PN0是最重要的八位元最低有效位。对于GCMP, Key ID字节组的ExtIV子字段(第5位)总是设置为1。
+Key ID八字节中的第6-7位是Key ID子字段。“Key ID”字节组的剩余位将被保留。
 
 ### 3.3 WPA/WPA2
 
@@ -433,6 +486,8 @@ CBC-MAC（Cipher-Block Chaining Message Authentication Code ）：用于认证�
 3. https://blog.csdn.net/rachel_4869/article/details/80128703
 4. https://www.likecs.com/show-203360773.html
 5. https://blog.csdn.net/lee244868149/article/details/52701703
+6. https://juejin.cn/post/6844904122676690951
+7. 
 
 
 
