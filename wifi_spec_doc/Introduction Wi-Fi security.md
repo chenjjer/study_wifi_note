@@ -363,8 +363,43 @@ CBC-MAC（Cipher-Block Chaining Message Authentication Code ）：用于认证�
 
 ​		通过上面的分析，我们可以看出，TKIP加密是基于MSDU的加密，而CCMP加密是基于MPDU的加密，这样就避免了针对MSDU的攻击，解决了在MSDU加密中不能解决的问题。
 
-
 #### 3.2.3 BIP
+
+​		BIP（Broadcast/Multicast Integrity Protocol）广播和多播整合协议在2009年802.11w中提出，与802.11-2010进入到Spec中。主要是针对广播类型管理帧的完整性和重放进行保护。它的架构在802.11W显示如下
+
+![img](Introduction Wi-Fi security.assets/v2-adadb59fa7f74200efbb7f1c388f2044_1440w.webp)
+
+BIP在CMAC模式下使用AES-128提供数据完整性和重放检测保护。
+
+BIP使用3/4次握手中增加了IGTK来计算MMPDU的MIC信息，当认证者分发一个新的GTK时，也应该分发新的IGTK和一个新的IPN号下图为IGTK的子元素格式
+
+![img](Introduction Wi-Fi security.assets/v2-897c6ae4de0c48ede1ebc859b2cfd66f_1440w.png)
+
+而且IGTK由发送它的STA的MAC地址和在MMIE秘钥ID字段中编码的密码标识符标记。多播管理帧结构对比如下：
+
+![img](Introduction Wi-Fi security.assets/v2-4175a48474189614110169421c5cf403_1440w.jpeg)
+
+多播管理帧结构对比，MMIE一般总是出现在帧尾，因为它是对帧主体和MMIE的一个签名。MMIE的详细信息如下：
+
+![img](Introduction Wi-Fi security.assets/v2-7022b42d70215e0a2eaf73e1448aa539_r.jpg)
+
+MMIE信息位
+
+KeyID: 密钥ID字段标识用于计算MIC的IGTK。
+
+IPN:48位整数的PN号。
+
+MIC:通过AAD和包含MMIE的帧主体串联通过AES-128-CMAC计算输出的64位信息，作为消息完整性校验值码。
+
+BIP传输：
+
+当STA传输一个多播管理帧时，它要选择一个当前使用IGTK来传输给接收方，然后构造MMIE，将MIC字段遮掩为0,KeyID字段设置为相应的IGTK KeyID值，在MMIE中插入一个IPN。再然后计算AAD；接着计算AES-128-CMAC，并将后64位输出插入MMIE MIC字段，最后组合80211头和主体，将MMIE放在主体后面附上FCS发送出去。
+
+BIP接收：
+
+当STA接收到一个多播的管理帧，它首先根据MMIE KeyID字段确定适当的IGTK密钥和关联状态，如果没有相关的IGTK信息，则直接丢掉此帧；
+
+当有IGTK信息时，接受者要解析MMIE IPN，然后比对KeyID字段标记的IGTK的接收计数器值(IGTK包含IPN信息)，如果前者小于或等于IGTK的重放计数器值，接收者悄悄的丢掉此帧，然后将自己的重放计数器加1，接收者提取并保存接收到的MIC1值，然后用AAD、包括MMIE的帧主体计算AES-128-CMAC，可以得到另一个MIC2，MIC1跟MIC2不匹配，接收者也丢掉此帧，将CMAC校验失败计数器加1。
 
 #### 3.2.4 GCMP
 
@@ -487,7 +522,7 @@ Key ID八字节中的第6-7位是Key ID子字段。“Key ID”字节组的剩�
 4. https://www.likecs.com/show-203360773.html
 5. https://blog.csdn.net/lee244868149/article/details/52701703
 6. https://juejin.cn/post/6844904122676690951
-7. 
+7. https://zhuanlan.zhihu.com/p/51695002
 
 
 
