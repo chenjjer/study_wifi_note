@@ -462,19 +462,168 @@ Key ID八字节中的第6-7位是Key ID子字段。“Key ID”字节组的剩�
 
 ### 3.3 WPA/WPA2
 
+​		由于WEP共享密钥认证采用的是基于RC4对称流的加密算法，需要预先配置相同的静态密钥，无论从加密机制还是从加密算法本身，都很容易受到安全威胁。为了解决这个问题，在802.11i标准没有正式推出安全性更高的安全策略之前，Wi-Fi联盟推出了针对WEP改良的WPA。WPA的核心加密算法还是采用RC4，在WEP基础上提出了临时密钥完整性协议TKIP（Temporal Key Integrity Protocol）加密算法，采用了802.1X的身份验证框架，支持EAP-PEAP、EAP-TLS等认证方式。随后802.11i安全标准组织又推出WPA2，区别于WPA，WPA2采用安全性更高的区块密码锁链-信息真实性检查码协议CCMP（Counter Mode with CBC-MAC Protocol）加密算法。
+
+​		为了实现更好的兼容性，在目前的实现中，WPA和WPA2都可以使用802.1X的接入认证、TKIP或CCMP的加密算法，他们之间的不同主要表现在协议报文格式上。
+
 ## 4. WPA3 Introduction
+
+​		WPA3是Wi-Fi联盟组织发布的新一代Wi-Fi加密协议，在WPA2的基础上增加了新的功能，以简化Wi-Fi安全保障方法、实现更可靠的身份验证，提高数据加密强度。所有的WPA3网络都必须进行管理帧保护PMF（Protected Management Frame），保证数据的安全性。
+
+​		根据Wi-Fi网络的用途和安全需求的不同，WPA3又分为WPA3个人版、WPA3企业版，即WPA3-SAE和WPA3-802.1X。WPA3为不同网络提供了额外功能：WPA3个人版增强了对密码安全的保护，而WPA3企业版的用户可以选择更高级的安全协议，保护敏感数据。此外，WPA3也在OPEN认证基础上推出了增强型开放网络认证——OWE认证。
 
 ### 4.1 Management Frame Protection(PMF)
 
+​		IEEE802.1w定义PMF，针对窃听和假冒为管理帧的行为为提供可靠的保护，2012年，WFA首次推出PMF，当时PMF是WPA2的可选功能，后来成为所有Wi-Fi Certified ac必要选项，现在随着WPA3的推出，WFA规定在所有的WPA3须使用PMF，从而为包括“action”帧，“Disassociate”帧和deauthenticate帧在内的单播和组播管理帧提供可靠的安全保护模式。
+
+##### 4.1.1 单播管理帧加密
+
+​		管理帧加密功能为非必备功能，需要交互双方协商。协商通过RSN能力集中的6、7两位来辨别。其中**第6bit为Management Frame Protection Required（MFPR）**，**第7bit为Management Frame Protection Capable （MFPC）**。MFPR代表是否需要强制支持管理帧加密，MFPC代表是否支持管理帧加密。协商时，如果一方要求强制支持802.11w（MFPR置1），而另一方不支持802.11w（MFPR置0），则无法协商成功；其他情况皆可。
+
+​		如果协商成功，则双方交互管理帧时，需要使用数据帧对应的密钥加密管理帧（不维护额外的密钥）。但目前802.11w仅支持CCMP加密套件，也就是说，对802.11w协议来说，CCMP+RSNA方式为必要条件。RSNA是Robust Security Network Association（健壮安全网络连接），为802.11i协议规定的一种新的安全机制，而CCMP（Counter mode with CBC-MAC Protocol，[计数器模式]搭配[区块密码锁链－信息真实性检查码]协议）为其中新增的一种加密强度目前最高的加密机制。
+
+##### 4.1.2 广播管理帧加密
+
+​		广播管理帧的处理与单播有所不同，它是在正常的playload之后增加一个Management MIC IE（MME)用于接收方判断合法性。其格式如下图所示：
+
+<img src="Introduction Wi-Fi security.assets/image-20221219153902592.png" alt="image-20221219153902592" style="zoom:50%;" />
+
+其中：
+
+Element ID表示该元素ID，Length表示长度，KeyID表示使用的密钥编号，IPN是IGTK报文序号，用来做replay Counter检测，MIC是加密后的校验码，用来校验报文合法性。
+
+##### 4.1.3 PMF在hostapd中的设定
+
+```
+982 # ieee80211w: whether management frame protection is enabled
+983 # 0 = disabled (default unless changed with the global pmf parameter)
+984 # 1 = optional
+985 # 2 = required
+986 # The most common configuration options for this based on the PMF (protected
+987 # management frames) certification program are:
+988 # PMF enabled: ieee80211w=1 and key_mgmt=WPA-EAP WPA-EAP-SHA256
+989 # PMF required: ieee80211w=2 and key_mgmt=WPA-EAP-SHA256
+990 # (and similarly for WPA-PSK and WPA-PSK-SHA256 if WPA2-Personal is used)
+991 # WPA3-Personal-only mode: ieee80211w=2 and key_mgmt=SAE
+```
+
 ### 4.2 WPA3-Personal
+
+​		在2018年推出WPA3来替代易受离线字典攻击的WPA2-Personal。它是基于SAE(对等实体同时认证），一种基于密码的认证和密钥建立协议，最初在IEEE802.1s中引入。其中WPA3 Personal有两种模式，wpa3-sae以及wpa3-sae transition mode。
 
 #### 4.2.1 WAP3-SAE
 
+其特点如下：
+
+- “对等实体同时验证（Simultaneous Authentication of Equals，简称SAE）”取代了“预共享密钥（Pre-Shared Key，简称PSK）”，提供更可靠的、基于密码的验证。WPA3-Personal通过证实密码信息，用密码进行身份验证，而不是进行密钥导出，从而为用户提供了增强的安全保护；
+- 要求AP和客户端支持PMF（管理帧保护），RSN IE中的必须支持管理帧保护（Management Frame Protection Required）设置为1.
+
+WPA3-SAE的整体帧交换结构如下：
+
+![SAE1-01](Introduction Wi-Fi security.assets/sae1-01.jpg)
+
+其中包含4次auth包，association 已经传统的4-handshake。
+
+在WiFi基础设施网络中，SAE握手协议针对每个客户端协商性的PMK,然后性的PMK用于传统的Wi-Fi四次握手协议，以产生会话密钥。Note：以往都是直接用PMK进行四路握手协议，SAE会在PMK基础上产生新的PMK. Beacon消息RSN IE中AKM取值8，代表AP支持SAE Authentication交互会发生2此，用来产生PMK，它的连线流程详细如下图所示：
+
+![image-20221220110821407](Introduction Wi-Fi security.assets/image-20221220110821407.png)
+
+交互过程步骤如下：
+
+1. 首先AP和STA都通过用户的密码,Mac address映射到椭圆曲线的一个点element PWE。
+
+2. STA通过authorization 1携带scalar（random1 + mask)以及element。
+
+   sniffer 来看，前面两个身份验证消息SAE消息类型“Commit or 1"，另外两个是SAE消息类型”Confirm or 2)
+
+   ![SAE1-05](Introduction Wi-Fi security.assets/sae1-05.jpg)
+
+3. AP接收到消息后，解析STA1 sae auth1 commit msg包括（pwe, scalar, element）并重新计算一个随机值random2, 然后利用KEY计算公式 key = random2x((random1 + mask1)xPWE - mask1 x PWE) = random2 x random1 x PWE。sniffer所示：
+
+   ![SAE1-06](Introduction Wi-Fi security.assets/sae1-06.jpg)
+
+   
+
+4. AP在通过SHA256生成最后的PMK和KCK。AP将发送auth2给到STA，并携带类似的内容帮助STA计算出相同的PMK和KCK。
+
+5. STA会再次发送authentication3，携带confirm字段，内容是双方之间交互过的信息（scalar1 + element1 + Scalar2 + element2 + KCK)的HASH_256值。sniffer所示：
+
+   <img src="Introduction Wi-Fi security.assets/sae1-07.jpg" alt="img" style="zoom:67%;" />
+
+6. AP收到后，执行相同算法验证，确认STA使用的KCK是否正确。
+
+7. AP发送auth4供STA验证，由于scalar/element计算顺序不一样，双方消息携带的confirm字段内容看起来不一样。
+
+   sniffer显示如下：
+
+   <img src="Introduction Wi-Fi security.assets/sae1-08.jpg" alt="img" style="zoom:67%;" />
+
+   
+
+SME的状态机如下：
+
+![image-20221220105608644](Introduction Wi-Fi security.assets/image-20221220105608644.png)
+
+下面需要补充hostapd相关的log：
+
+
+
 #### 4.2.2 WPA3  SAE Transition Mode
+
+其特点如下：
+
+- 过渡模式，允许逐步向WPA3-Personal网络迁移，同时保持与WPA2-Personal设备的互操作性，且不会干扰到用户；
+- 网络配置为能够支持PMF（“能够支持管理帧保护（Management Frame Protection Capable）”位=1和“必须支持管理帧保护（Management Frame Protection Required）”位=0），而不是必须支持PMF。
+- 过渡模式中，WPA3-Personal接入点（AP）在单个“基本服务集（Basic Service Set，简称BSS）”上同时支持WPA2-Personal和WPA3-Personal
+
+下面是WFA中对WPA3 SAE过渡模式的规范要求：
+
+1.  当WPA2-PSK和WPA3-SAE在同一个BSS（混合模式）上配置时，MFPC = 1, MFPR = 0.
+2. 当WPA2-PSK和WPA3-SAE在同一个BSS上配置时，如果没有为该关联协商PMF，则AP应拒绝SAE的关联。
+3. WPA3-SAE STA应协商使用WPA3-SAE转换模式关联到AP的PMF。
+
+
 
 ### 4.3  WPA3-Enterprise
 
+​		WPA3-Enterprise是在2019年12月 WFA 列出的，它将取代WPA2-Enterprise，目前WPA3-Enterprise有3种操作模式。
+
+- WPA3-Enterprise only
+
+  当BSS配置为WPA3企业模式，PMF设置为required，同时STA关联到AP的过程中，也是需要协商PMF的
+
+- WPA3-Enterprise Transition
+
+  当BSS配置为WPA3 企业过度模式， PMF设置capable。
+
+- WPA3-Enterprise 192-Bit
+
+  当AP使用WPA3企业 192bit mode，PMF应该设置为required，STA使用此模式，PMF required也是如此，允许与WPA3企业192bit mode一起使用的EAP密码套件是：
+
+  TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+
+  ECDHE_ECDSA使用384位素数模数曲线P-384
+
+  TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+
+  ECDHE使用384位素数模数曲线P-384
+
+  TLS_DHE_RSA_WITH_AES-256_GCM_SHA384
+
+
+
 ### 4.4 Enhanced Open
+
+​		在传统加密中提供open system的加密方式，但随着信息安全的不断被重视，为了保证传输数据的隐蔽性，WFA提出Enhanced Open Certification。此认证是基于OWE(Opportunistic Wireless Encryption)协议。 OWE是定义在IETF RFC 8110. OWE协议集成已建立的加密机制，为每个用户提供唯一的个人加密，保证用户和接入点之间的数据交换。在实际的使用过程中，OWE与Open的加密方式是一样的，也是不需要输入密码。Enhanced Open不是WPA3的一部分，它是一种完全不同的可选安全认证。针对OWE，当前有两种运行模式
+
+- Enhanced Open Only
+  此种模式下，OWE采用128 bit CCMP/AES加密算法，数据帧和管理帧都会被加密。
+
+- Enhanced Open Transition
+
+  此加密模式是为了向后兼容，对不支持OWE协议，会采用两个SSID。当一个open加密方式的被配置，第二个隐藏的ssid会自动配置。如果在beacon中有一个OWE IE，它会将客户的机器引导到使用OWE的隐藏SSID中。
+
+
 
 ### 4.5 WPA3 Code Flow
 
@@ -514,6 +663,12 @@ Key ID八字节中的第6-7位是Key ID子字段。“Key ID”字节组的剩�
 
 ### 7.6 802.11k AP Assisted Roaming
 
+appendx
+
+![img](Introduction Wi-Fi security.assets/sae1-03.jpg)
+
+![img](Introduction Wi-Fi security.assets/sae1-04.jpg)
+
 ## reference
 
 1. https://blog.csdn.net/u014294681/article/details/86690241
@@ -523,6 +678,11 @@ Key ID八字节中的第6-7位是Key ID子字段。“Key ID”字节组的剩�
 5. https://blog.csdn.net/lee244868149/article/details/52701703
 6. https://juejin.cn/post/6844904122676690951
 7. https://zhuanlan.zhihu.com/p/51695002
+8. https://support.huawei.com/enterprise/zh/doc/EDOC1100197294/55cf2fd8
+9. https://cloud.tencent.com/developer/article/2028958
+10. https://blog.csdn.net/weixin_43408952/article/details/83044719
+11. https://www.h3c.com/cn/d_201708/1018833_30005_0.htm
+12. 
 
 
 
