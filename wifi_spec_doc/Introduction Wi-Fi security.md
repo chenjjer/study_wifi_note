@@ -682,7 +682,9 @@ appendx
 9. https://cloud.tencent.com/developer/article/2028958
 10. https://blog.csdn.net/weixin_43408952/article/details/83044719
 11. https://www.h3c.com/cn/d_201708/1018833_30005_0.htm
-12. 
+12. http://www.h3c.com/cn/Service/Document_Software/Document_Center/Home/Switches/00-Public/Learn_Technologies/White_Paper/WPA3_WP-6W100/?CHID=436764#_Toc41407033
+13. https://support.huawei.com/enterprise/en/doc/EDOC1100096325/b27702df/understanding-wlan-security-policies
+14. 
 
 
 
